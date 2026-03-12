@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R Johnston Art — London Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0c0a;
+    --linen: #f5f0e8;
+    --ecru: #e8e0d0;
+    --orange: #FF4500;
+    --warm-grey: #8a8070;
+    --mid: #3a3530;
+    --serif: 'Playfair Display', Georgia, serif;
+    --display: 'Bebas Neue', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --cormorant: 'Cormorant Garamond', serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--linen);
+    color: var(--ink);
+    font-family: var(--cormorant);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background 0.3s ease;
+    mix-blend-mode: multiply;
+  }
+  #cursor-ring {
+    position: fixed;
+    width: 40px; height: 40px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease, width 0.4s ease, height 0.4s ease, border-color 0.3s ease, opacity 0.3s ease;
+  }
+  body.cursor-hover #cursor { width: 60px; height: 60px; background: var(--orange); mix-blend-mode: normal; opacity: 0.15; }
+  body.cursor-hover #cursor-ring { width: 60px; height: 60px; border-color: var(--orange); }
+
+  /* CURSOR REVEAL CANVAS */
+  #reveal-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  /* VERTICAL NAV */
+  #nav-trigger {
+    position: fixed;
+    left: 0; top: 0;
+    width: 48px; height: 100vh;
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  #nav-trigger span {
+    display: block;
+    width: 28px; height: 1px;
+    background: var(--ink);
+    transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.3s;
+    transform-origin: center;
+  }
+  #nav-trigger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  #nav-trigger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  #nav-trigger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  #nav-overlay {
+    position: fixed;
+    left: 0; top: 0;
+    width: 100vw; height: 100vh;
+    background: var(--ink);
+    z-index: 700;
+    transform: translateX(-100%);
+    transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+    display: flex;
+    align-items: flex-end;
+    padding: 60px 80px;
+  }
+  #nav-overlay.open { transform: translateX(0); }
+
+  .nav-menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .nav-menu li {
+    overflow: hidden;
+  }
+  .nav-menu a {
+    display: block;
+    font-family: var(--display);
+    font-size: clamp(60px, 10vw, 120px);
+    color: var(--linen);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transform: translateY(100%);
+    transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1), color 0.3s;
+    line-height: 0.9;
+  }
+  #nav-overlay.open .nav-menu a { transform: translateY(0); }
+  #nav-overlay.open .nav-menu li:nth-child(1) a { transition-delay: 0.1s; }
+  #nav-overlay.open .nav-menu li:nth-child(2) a { transition-delay: 0.15s; }
+  #nav-overlay.open .nav-menu li:nth-child(3) a { transition-delay: 0.2s; }
+  #nav-overlay.open .nav-menu li:nth-child(4) a { transition-delay: 0.25s; }
+  #nav-overlay.open .nav-menu li:nth-child(5) a { transition-delay: 0.3s; }
+  .nav-menu a:hover { color: var(--orange); }
+
+  .nav-info {
+    position: absolute;
+    top: 60px; right: 80px;
+    color: var(--warm-grey);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    line-height: 2;
+    text-align: right;
+  }
+
+  /* HERO */
+  #hero {
+    position: relative;
+    height: 100vh;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 80px 0 80px;
+    overflow: hidden;
+    background: var(--linen);
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--warm-grey);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    padding-left: 4px;
+  }
+
+  .hero-title {
+    font-family: var(--display);
+    font-size: clamp(80px, 14vw, 200px);
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    position: relative;
+    z-index: 2;
+  }
+  .hero-title .line { display: block; overflow: hidden; }
+  .hero-title .line-inner {
+    display: block;
+    transform: translateY(110%);
+    animation: slideUp 1s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  }
+  .hero-title .line:nth-child(1) .line-inner { animation-delay: 0.2s; }
+  .hero-title .line:nth-child(2) .line-inner { animation-delay: 0.35s; }
+  .hero-title .line:nth-child(3) .line-inner { animation-delay: 0.5s; color: var(--orange); }
+
+  @keyframes slideUp {
+    to { transform: translateY(0); }
+  }
+
+  .hero-sub {
+    position: absolute;
+    bottom: 60px; right: 80px;
+    max-width: 280px;
+    text-align: right;
+  }
+  .hero-sub p {
+    font-family: var(--cormorant);
+    font-style: italic;
+    font-size: 20px;
+    color: var(--mid);
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeIn 1s ease 1.2s forwards;
+  }
+  .hero-sub .hero-scroll {
+    display: block;
+    margin-top: 24px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--warm-grey);
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeIn 1s ease 1.5s forwards;
+  }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .hero-border-v {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--ecru);
+  }
+  .hero-border-v.left { left: 60px; }
+  .hero-border-v.right { right: 60px; }
+
+  .hero-number {
+    position: absolute;
+    top: 50%;
+    right: 80px;
+    transform: translateY(-50%);
+    font-family: var(--display);
+    font-size: 360px;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ecru);
+    pointer-events: none;
+    z-index: 0;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  /* SECTION LABELS */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--warm-grey);
+  }
+
+  /* HORIZONTAL GALLERY */
+  #gallery {
+    position: relative;
+    padding: 120px 0 60px;
+    background: var(--ink);
+    overflow: hidden;
+  }
+
+  .gallery-header {
+    padding: 0 80px;
+    margin-bottom: 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .gallery-header h2 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 72px);
+    color: var(--linen);
+    font-weight: 400;
+    font-style: italic;
+  }
+  .gallery-header .gallery-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--warm-grey);
+    letter-spacing: 0.1em;
+    padding-bottom: 8px;
+  }
+
+  .gallery-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 0 80px 80px;
+    cursor: none;
+  }
+  .gallery-scroll-container::-webkit-scrollbar { display: none; }
+
+  .gallery-track {
+    display: flex;
+    gap: 24px;
+    width: max-content;
+  }
+
+  .gallery-item {
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .gallery-item:nth-child(odd) { width: 420px; height: 560px; margin-top: 40px; }
+  .gallery-item:nth-child(even) { width: 340px; height: 460px; margin-top: 0; }
+  .gallery-item:nth-child(3n) { width: 520px; height: 620px; margin-top: 60px; }
+
+  .gallery-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    background: var(--mid);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .gallery-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    opacity: 0.3;
+    transition: opacity 0.5s;
+  }
+  .gallery-item:hover .gallery-img::after { opacity: 0.6; }
+  .gallery-item:hover .gallery-img { transform: scale(1.04); }
+
+  /* Placeholder art blocks */
+  .art-block {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .art-block-1 { background: linear-gradient(135deg, #2a2420 0%, #4a3828 50%, #1a1210 100%); }
+  .art-block-2 { background: linear-gradient(200deg, #1e2a1e 0%, #3a4a2a 60%, #0a120a 100%); }
+  .art-block-3 { background: linear-gradient(45deg, #2a1a10 0%, #5a3020 50%, #1a0a04 100%); }
+  .art-block-4 { background: linear-gradient(160deg, #1a1a2a 0%, #2a2a4a 50%, #0a0a1a 100%); }
+  .art-block-5 { background: linear-gradient(80deg, #2a2010 0%, #4a3818 50%, #1a1208 100%); }
+  .art-block-6 { background: linear-gradient(220deg, #1a2020 0%, #2a3838 60%, #080e0e 100%); }
+
+  .art-title-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 28px;
+    background: linear-gradient(to top, rgba(13,12,10,0.9) 0%, transparent 60%);
+    transform: translateY(30px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .gallery-item:hover .art-title-overlay { transform: translateY(0); opacity: 1; }
+
+  .art-series {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .art-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--linen);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .art-note {
+    font-family: var(--cormorant);
+    font-size: 13px;
+    color: var(--warm-grey);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .gallery-item .parallax-title {
+    position: absolute;
+    top: 20px; left: 20px;
+    font-family: var(--display);
+    font-size: 80px;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(245,240,232,0.15);
+    line-height: 1;
+    pointer-events: none;
+    letter-spacing: 0.02em;
+    z-index: 2;
+  }
+
+  /* STUDIO SECTION */
+  #studio {
+    background: var(--ecru);
+    padding: 140px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  #studio::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--warm-grey), transparent);
+  }
+
+  .studio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .studio-left {}
+  .studio-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--warm-grey);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .studio-heading {
+    font-family: var(--serif);
+    font-size: clamp(42px, 5vw, 72px);
+    color: var(--ink);
+    font-weight: 400;
+    line-height: 1.05;
+    margin-bottom: 48px;
+  }
+  .studio-heading em { font-style: italic; color: var(--mid); }
+
+  .studio-process {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .process-item {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 20px;
+    padding: 28px 0;
+    border-bottom: 1px solid rgba(138,128,112,0.3);
+  }
+  .process-item:first-child { border-top: 1px solid rgba(138,128,112,0.3); }
+  .process-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 0.1em;
+    padding-top: 2px;
+  }
+  .process-content h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .process-content p {
+    font-family: var(--cormorant);
+    font-size: 17px;
+    color: var(--warm-grey);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .studio-right {
+    padding-top: 60px;
+  }
+  .studio-image-block {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: var(--mid);
+    position: relative;
+    overflow: hidden;
+  }
+  .studio-art-bg {
+    width: 100%; height: 100%;
+    background: linear-gradient(170deg, #2a2218 0%, #4a3828 40%, #1a120c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .studio-art-bg::before {
+    content: 'STUDIO';
+    font-family: var(--display);
+    font-size: 100px;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(245,240,232,0.08);
+    letter-spacing: 0.1em;
+  }
+  .studio-caption {
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warm-grey);
+    letter-spacing: 0.12em;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* SHOP SECTION */
+  #shop {
+    background: var(--linen);
+    padding: 140px 80px;
+    position: relative;
+  }
+
+  .shop-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 80px;
+    align-items: end;
+  }
+  .shop-heading {
+    font-family: var(--display);
+    font-size: clamp(60px, 9vw, 130px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .shop-intro {
+    font-family: var(--cormorant);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--mid);
+    line-height: 1.6;
+    padding-bottom: 8px;
+    max-width: 380px;
+  }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .shop-item {
+    background: var(--ecru);
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+  }
+  .shop-item:nth-child(2) { margin-top: 60px; }
+  .shop-item:nth-child(3) { margin-top: -30px; }
+
+  .shop-img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    position: relative;
+  }
+  .shop-art-bg {
+    width: 100%; height: 100%;
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .shop-item:hover .shop-art-bg { transform: scale(1.05); }
+  .shop-art-1 { background: linear-gradient(140deg, #3a2818 0%, #6a4830 50%, #2a1808 100%); }
+  .shop-art-2 { background: linear-gradient(210deg, #18182a 0%, #2a2a4a 60%, #080818 100%); }
+  .shop-art-3 { background: linear-gradient(60deg, #1a2218 0%, #2a3828 50%, #0a120a 100%); }
+
+  .shop-info {
+    padding: 24px 28px 32px;
+  }
+  .shop-series {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--warm-grey);
+    margin-bottom: 8px;
+  }
+  .shop-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .shop-medium {
+    font-family: var(--cormorant);
+    font-size: 15px;
+    color: var(--warm-grey);
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  .shop-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .shop-price {
+    font-family: var(--display);
+    font-size: 36px;
+    color: var(--orange);
+    letter-spacing: 0.03em;
+    line-height: 1;
+  }
+  .shop-btn {
+    background: var(--ink);
+    color: var(--linen);
+    border: none;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s, color 0.3s;
+  }
+  .shop-btn:hover { background: var(--orange); }
+
+  .shop-availability {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: var(--orange);
+    color: var(--linen);
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+  }
+  .shop-availability.sold {
+    background: var(--warm-grey);
+  }
+
+  /* ARCHIVE / FOOTER */
+  #archive {
+    background: var(--ink);
+    position: relative;
+    overflow: hidden;
+    padding: 100px 80px 60px;
+  }
+  #archive::before {
+    content: 'ARCHIVE';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--display);
+    font-size: 280px;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(245,240,232,0.04);
+    white-space: nowrap;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+  }
+
+  .archive-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 80px;
+    margin-bottom: 100px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .archive-col h3 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--warm-grey);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(138,128,112,0.2);
+  }
+
+  .archive-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .archive-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .archive-list a {
+    font-family: var(--cormorant);
+    font-size: 18px;
+    font-style: italic;
+    color: var(--linen);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .archive-list a:hover { color: var(--orange); }
+  .archive-list .year {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warm-grey);
+    letter-spacing: 0.1em;
+  }
+
+  /* NEWSLETTER */
+  .newsletter-col {}
+  .newsletter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .newsletter-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(138,128,112,0.4);
+    padding: 12px 0;
+    color: var(--linen);
+    font-family: var(--cormorant);
+    font-size: 18px;
+    font-style: italic;
+    outline: none;
+    transition: border-color 0.3s;
+    width: 100%;
+  }
+  .newsletter-input::placeholder { color: var(--warm-grey); }
+  .newsletter-input:focus { border-color: var(--orange); }
+  .newsletter-submit {
+    background: transparent;
+    border: 1px solid var(--warm-grey);
+    color: var(--linen);
+    padding: 14px 28px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: border-color 0.3s, color 0.3s, background 0.3s;
+    margin-top: 8px;
+    align-self: flex-start;
+  }
+  .newsletter-submit:hover { border-color: var(--orange); color: var(--orange); background: rgba(255,69,0,0.05); }
+
+  .newsletter-note {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--warm-grey);
+    letter-spacing: 0.1em;
+    margin-top: 16px;
+    line-height: 1.8;
+  }
+
+  /* STUDIO CLOCK */
+  .clock-col {}
+  .clock-display {
+    font-family: var(--display);
+    font-size: 72px;
+    color: var(--linen);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    margin-top: 4px;
+  }
+  .clock-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warm-grey);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 12px;
+  }
+  .clock-city {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .clock-dot {
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .clock-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warm-grey);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* FOOTER BOTTOM */
+  .archive-bottom {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 60px;
+    border-top: 1px solid rgba(138,128,112,0.15);
+  }
+  .footer-logo {
+    font-family: var(--display);
+    font-size: 48px;
+    color: var(--linen);
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+  .footer-logo span {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--warm-grey);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .footer-links {
+    display: flex;
+    gap: 40px;
+  }
+  .footer-links a {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warm-grey);
+    text-decoration: none;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .footer-links a:hover { color: var(--orange); }
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: rgba(138,128,112,0.5);
+    letter-spacing: 0.1em;
+  }
+
+  /* MARQUEE */
+  .marquee-bar {
+    background: var(--orange);
+    overflow: hidden;
+    padding: 14px 0;
+    position: relative;
+  }
+  .marquee-track {
+    display: flex;
+    gap: 0;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+  }
+  .marquee-track span {
+    font-family: var(--display);
+    font-size: 18px;
+    color: var(--linen);
+    letter-spacing: 0.08em;
+    padding: 0 40px;
+  }
+  .marquee-track span.sep {
+    color: rgba(245,240,232,0.4);
+    padding: 0;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* SECTION DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent 0%, var(--warm-grey) 30%, var(--warm-grey) 70%, transparent 100%);
+    opacity: 0.3;
+  }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    #hero { padding: 0 40px; }
+    .hero-sub { right: 40px; bottom: 40px; }
+    #gallery .gallery-header, .gallery-scroll-container { padding-left: 40px; padding-right: 40px; }
+    #studio, #shop, #archive { padding-left: 40px; padding-right: 40px; }
+    .studio-grid, .shop-header, .archive-top { grid-template-columns: 1fr; gap: 40px; }
+    .shop-grid { grid-template-columns: 1fr; }
+    .shop-item:nth-child(2), .shop-item:nth-child(3) { margin-top: 0; }
+    .archive-bottom { flex-direction: column; gap: 32px; align-items: flex-start; }
+    .footer-links { flex-wrap: wrap; gap: 20px; }
+    .nav-info { display: none; }
+    #nav-overlay { padding: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<button id="nav-trigger" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div id="nav-overlay">
+  <div class="nav-info">
+    R Johnston Art<br>
+    London Studio<br>
+    Est. 2011
+  </div>
+  <nav>
+    <ul class="nav-menu">
+      <li><a href="#hero" onclick="closeNav()">Home</a></li>
+      <li><a href="#gallery" onclick="closeNav()">Work</a></li>
+      <li><a href="#studio" onclick="closeNav()">Studio</a></li>
+      <li><a href="#shop" onclick="closeNav()">Acquire</a></li>
+      <li><a href="#archive" onclick="closeNav()">Archive</a></li>
+    </ul>
+  </nav>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-border-v left"></div>
+  <div class="hero-border-v right"></div>
+  <div class="hero-number">01</div>
+  <div class="hero-eyebrow">London Studio — Fine Art — Est. 2011</div>
+  <h1 class="hero-title">
+    <span class="line"><span class="line-inner">R</span></span>
+    <span class="line"><span class="line-inner">JOHN</span></span>
+    <span class="line"><span class="line-inner">SON</span></span>
+  </h1>
+  <div class="hero-sub">
+    <p>Oil, charcoal & encaustic<br>works exploring light,<br>memory & material truth.</p>
+    <span class="hero-scroll">↓ Scroll to enter</span>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-bar">
+  <div class="marquee-track" id="marquee-track">
+    <span>Original Works</span><span class="sep">—</span>
+    <span>Limited Editions</span><span class="sep">—</span>
+    <span>Studio Commissions</span><span class="sep">—</span>
+    <span>Exhibition Prints</span><span class="sep">—</span>
+    <span>Oil on Linen</span><span class="sep">—</span>
+    <span>Encaustic Series</span><span class="sep">—</span>
+    <span>Charcoal Studies</span><span class="sep">—</span>
+    <span>Original Works</span><span class="sep">—</span>
+    <span>Limited Editions</span><span class="sep">—</span>
+    <span>Studio Commissions</span><span class="sep">—</span>
+    <span>Exhibition Prints</span><span class="sep">—</span>
+    <span>Oil on Linen</span><span class="sep">—</span>
+    <span>Encaustic Series</span><span class="sep">—</span>
+    <span>Charcoal Studies</span><span class="sep">—</span>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="gallery-header reveal">
+    <div>
+      <div class="section-label" style="color:var(--warm-grey); margin-bottom:16px;">02 — Selected Works</div>
+      <h2>The <em>Portfolio</em></h2>
+    </div>
+    <div class="gallery-note">Drag to explore ↔</div>
+  </div>
+
+  <div class="gallery-scroll-container" id="galleryScroll">
+    <div class="gallery-track">
+
+      <div class="gallery-item">
+        <div class="gallery-img">
+          <div class="art-block art-block-1">
+            <span class="parallax-title">I</span>
+          </div>
+          <div class="art-title-overlay">
+            <div class="art-series">Dissolution Series</div>
+            <div class="art-name">Meridian at Dusk, No. 3</div>
+            <div class="art-note">Oil on linen, 120 × 90 cm — The horizon as punctuation. A moment the eye cannot hold.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-img">
+          <div class="art-block art-block-2">
+            <span class="parallax-title">II</span>
+          </div>
+          <div class="art-title-overlay">
+            <div class="art-series">Threshold Series</div>
+            <div class="art-name">Before the Return</div>
+            <div class="art-note">Encaustic on panel, 60 × 80 cm — Wax holds light differently than paint. Memory works the same way.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-img">
+          <div class="art-block art-block-3">
+            <span class="parallax-title">III</span>
+          </div>
+          <div class="art-title-overlay">
+            <div class="art-series">Dissolution Series</div>
+            <div class="art-name">Thermal Edge Study</div>
+            <div class="art-note">Charcoal on Fabriano, 100 × 70 cm — Heat made visible through absence of colour.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-img">
+          <div class="art-block art-block-4">
+            <span class="parallax-title">IV</span>
+          </div>
+          <div class="art-title-overlay">
+            <div class="art-series">Nocturne Series</div>
+            <div class="art-name">Blue Hour, Bankside</div>
+            <div class="art-note">Oil on canvas, 150 × 120 cm — London at the exact minute colour surrenders to dark.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-img">
+          <div class="art-block art-block-5">
+            <span class="parallax-title">V</span>
+          </div>
+          <div class="art-title-overlay">
+            <div class="art-series">Threshold Series</div>
+            <div class="art-name">Persistence</div>
+            <div class="art-note">Mixed media on board, 80 × 80 cm — What remains when you scrape back to the first mark.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-img">
+          <div class="art-block art-block-6">
+            <span class="parallax-title">VI</span>
+          </div>
+          <div class="art-title-overlay">
+            <div class="art-series">Nocturne Series</div>
+            <div class="art-name">Still Life with Salt</div>
+            <div class="art-note">Oil on linen, 90 × 70 cm — Ordinary objects made strange by oblique winter light.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- STUDIO -->
+<section id="studio">
+  <div class="studio-grid">
+    <div class="studio-left reveal">
+      <div class="studio-eyebrow">03 — Process & Practice</div>
+      <h2 class="studio-heading">The Studio <em>as Laboratory</em></h2>
+      <div class="studio-process">
+        <div class="process-item">
+          <div class="process-num">01</div>
+          <div class="process-content">
+            <h3>Observation</h3>
+            <p>Every work begins with sustained looking — hours, sometimes days, before a mark is made. The hand must understand what the eye has seen.</p>
+          </div>
+        </div>
+        <div class="process-item">
+          <div class="process-num">02</div>
+          <div class="process-content">
+            <h3>Material Inquiry</h3>
+            <p>Oil, encaustic, charcoal — each medium asks different questions. The work reveals itself through the resistance of the material.</p>
+          </div>
+        </div>
+        <div class="process-item">
+          <div class="process-num">03</div>
+          <div class="process-content">
+            <h3>Revision as Method</h3>
+            <p>Overpainting, scraping, erasure. The visible history of a work is part of the work. Nothing is hidden.</p>
+          </div>
+        </div>
+        <div class="process-item">
+          <div class="process-num">04</div>
+          <div class="process-content">
+            <h3>Commission</h3>
+            <p>Studio visits by arrangement. Bespoke works from three months. All enquiries handled personally.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="studio-right reveal">
+      <div class="studio-image-block">
+        <div class="studio-art-bg"></div>
+      </div>
+      <div class="studio-caption">
+        <span>Studio, Bermondsey SE1</span>
+        <span>Natural north light</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section id="shop">
+  <div class="shop-header reveal">
+    <div class="shop-heading">ACQUIRE<br>WORK</div>
+    <p class="shop-intro">Each piece is unique. Certificates of authenticity, professional packing and worldwide shipping included.</p>
+  </div>
+  <div class="shop-grid">
+
+    <div class="shop-item reveal">
+      <div class="shop-availability">Available</div>
+      <div class="shop-img">
+        <div class="shop-art-bg shop-art-1"></div>
+      </div>
+      <div class="shop-info">
+        <div class="shop-series">Dissolution Series</div>
+        <div class="shop-title">Meridian at Dusk, No. 3</div>
+        <div class="shop-medium">Oil on linen · 120 × 90 cm · 2024</div>
+        <div class="shop-price-row">
+          <div class="shop-price">£4,800</div>
+          <button class="shop-btn" onclick="enquire(this)">Enquire</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="shop-item reveal">
+      <div class="shop-availability">Available</div>
+      <div class="shop-img">
+        <div class="shop-art-bg shop-art-2"></div>
+      </div>
+      <div class="shop-info">
+        <div class="shop-series">Nocturne Series</div>
+        <div class="shop-title">Blue Hour, Bankside</div>
+        <div class="shop-medium">Oil on canvas · 150 × 120 cm · 2023</div>
+        <div class="shop-price-row">
+          <div class="shop-price">£7,200</div>
+          <button class="shop-btn" onclick="enquire(this)">Enquire</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="shop-item reveal">
+      <div class="shop-availability sold">Sold</div>
+      <div class="shop-img">
+        <div class="shop-art-bg shop-art-3"></div>
+      </div>
+      <div class="shop-info">
+        <div class="shop-series">Threshold Series</div>
+        <div class="shop-title">Before the Return</div>
+        <div class="shop-medium">Encaustic on panel · 60 × 80 cm · 2024</div>
+        <div class="shop-price-row">
+          <div class="shop-price">£3,400</div>
+          <button class="shop-btn" style="opacity:0.4; pointer-events:none;">Sold</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ARCHIVE / FOOTER -->
+<section id="archive">
+  <div class="archive-top">
+
+    <div class="archive-col reveal">
+      <h3>Exhibitions</h3>
+      <ul class="archive-list">
+        <li><a href="#">The Weight of Light</a><span class="year">2024</span></li>
+        <li><a href="#">Material Conditions</a><span class="year">2023</span></li>
+        <li><a href="#">Nocturnal Geometries</a><span class="year">2022</span></li>
+        <li><a href="#">Edge Studies</a><span class="year">2021</span></li>
+        <li><a href="#">Surface / Threshold</a><span class="year">2020</span></li>
+        <li><a href="#">First Light</a><span class="year">2018</span></li>
+      </ul>
+    </div>
+
+    <div class="archive-col reveal">
+      <h3>Studio Clock — London</h3>
+      <div class="clock-display" id="clock">--:--:--</div>
+      <div class="clock-date" id="clock-date">—</div>
+      <div class="clock-city">
+        <div class="clock-dot"></div>
+        <div class="clock-label">Bermondsey SE1 · Studio Open</div>
+      </div>
+      <div style="margin-top:40px;">
+        <h3 style="margin-bottom:16px; padding-bottom:16px; border-bottom: 1px solid rgba(138,128,112,0.2);">Press & Collections</h3>
+        <ul class="archive-list">
+          <li><a href="#">Royal Academy Summer</a><span class="year">2023</span></li>
+          <li><a href="#">The Arts Council, UK</a><span class="year">2022</span></li>
+          <li><a href="#">Saatchi Gallery</a><span class="year">2021</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="archive-col reveal">
+      <h3>Newsletter</h3>
+      <div class="newsletter-form">
+        <input class="newsletter-input" type="text" placeholder="Your name" autocomplete="off">
+        <input class="newsletter-input" type="email" placeholder="your@email.com" autocomplete="off">
+        <button class="newsletter-submit" onclick="handleSubscribe(this)">Subscribe →</button>
+      </div>
+      <div class="newsletter-note">
+        Studio updates, new works,<br>
+        exhibition announcements.<br>
+        No noise. Unsubscribe any time.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="archive-bottom">
+    <div class="footer-logo">
+      RJ
+      <span>R Johnston Art · London</span>
+    </div>
+    <div class="footer-links">
+      <a href="#">Instagram</a>
+      <a href="#">Studio Visits</a>
+      <a href="#">Press</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-copy">© 2025 R Johnston Art. All rights reserved.</div>
+  </div>
+</section>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+
+function animateRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) *.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+document.querySelectorAll('a, button, .shop-item, .gallery-item').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+});
+
+// NAV
+const navTrigger = document.getElementById('nav-trigger');
+const navOverlay = document.getElementById('nav-overlay');
+
+navTrigger.addEventListener('click', () => {
+  navTrigger.classList.toggle('open');
+  navOverlay.classList.toggle('open');
+  document.body.style.overflow = navOverlay.classList.contains('open') ? 'hidden' : '';
+});
+
+function closeNav() {
+  navTrigger.classList.remove('open');
+  navOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+navOverlay.addEventListener('click', e => {
+  if (e.target === navOverlay) closeNav();
+});
+
+// HORIZONTAL GALLERY DRAG
+const scroll = document.getElementById('galleryScroll');
+let isDown = false, startX, left;
+scroll.addEventListener('mousedown', e => { isDown = true; startX = e.pageX - scroll.offsetLeft; left = scroll.scrollLeft; });
+scroll.addEventListener('mouseleave', () => isDown = false);
+scroll.addEventListener('mouseup', () => isDown = false);
+scroll.addEventListener('mousemove', e => {
+  if (!isDown) return;
+  e.preventDefault();
+  const x = e.pageX - scroll.offsetLeft;
+  scroll.scrollLeft = left - (x - startX) * 1.5;
+});
+
+// PARALLAX on gallery scroll
+scroll.addEventListener('scroll', () => {
+  document.querySelectorAll('.parallax-title').forEach((el, i) => {
+    const offset = scroll.scrollLeft * (0.04 + i * 0.01);
+    el.style.transform = `translateX(${offset}px)`;
+  });
+});
+
+// CLOCK
+function updateClock() {
+  const now = new Date();
+  const london = new Date(now.toLocaleString('en-GB', { timeZone: 'Europe/London' }));
+  const h = String(london.getHours()).padStart(2, '0');
+  const m = String(london.getMinutes()).padStart(2, '0');
+  const s = String(london.getSeconds()).padStart(2, '0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('clock-date').textContent = `${days[london.getDay()]}, ${london.getDate()} ${months[london.getMonth()]} ${london.getFullYear()}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// SCROLL REVEAL
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      entry.target.style.transitionDelay = (entry.target.dataset.delay || '0') + 'ms';
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach((el, i) => {
+  el.dataset.delay = (i % 3) * 120;
+  observer.observe(el);
+});
+
+// ENQUIRE
+function enquire(btn) {
+  const orig = btn.textContent;
+  btn.textContent = 'Sent ✓';
+  btn.style.background = '#2a2a2a';
+  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 3000);
+}
+
+// NEWSLETTER
+function handleSubscribe(btn) {
+  btn.textContent = 'Thank you ✓';
+  btn.style.borderColor = 'var(--orange)';
+  btn.style.color = 'var(--orange)';
+}
+
+// HERO CURSOR TRAIL
+const heroSection = document.getElementById('hero');
+heroSection.addEventListener('mousemove', (e) => {
+  const rect = heroSection.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const xPct = (x / rect.width - 0.5) * 2;
+  const yPct = (y / rect.height - 0.5) * 2;
+  document.querySelector('.hero-title').style.transform = `translate(${xPct * 8}px, ${yPct * 5}px)`;
+  document.querySelector('.hero-number').style.transform = `translateY(-50%) translate(${xPct * -20}px, ${yPct * -10}px)`;
+});
+heroSection.addEventListener('mouseleave', () => {
+  document.querySelector('.hero-title').style.transform = '';
+  document.querySelector('.hero-number').style.transform = '';
+});
+</script>
+</body>
+</html>
